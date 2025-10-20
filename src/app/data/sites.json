@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "PG688",
+    "logo": "/logos/pg688.webp",
+    "loginUrl": "https://www.pg68846108.com/tac/api/login/password",
+    "getCountUrl": "https://www.pg68846108.com/tac/api/workflow/getAvailableTasksNewVersion?pageNo=1&maxResult=50",
+    "referer": "https://www.pg68846108.com/",
+    "operatorName": "it02okvippg688",
+    "password": "An&aSUIXM2"
+  },
+  {
+    "id": 2,
+    "name": "NEW88",
+    "logo": "/logos/new88.ewbp",
+    "loginUrl": "https://www.pg789328341.com/tac/api/login/password",
+    "getCountUrl": "https://www.pg789328341.com/tac/api/workflow/getAvailableTasksNewVersion?pageNo=1&maxResult=50",
+    "referer": "https://www.pg789328341.com",
+    "operatorName": "it01new88",
+    "password": "j4dKM@%$M*%l"
+  }
+]
