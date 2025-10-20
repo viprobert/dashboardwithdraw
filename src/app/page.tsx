@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { fetchPG688Counts } from "./services/pg688.service";
 
 const sampleSites = [
   { id: 1, name: "PG688", logo: "/logos/PG688.webp", counts: { new: 5, transfer: 2, bounce: 1, tpf: 3 } },
@@ -53,6 +54,21 @@ export default function PendingDashboard() {
       { new: 0, transfer: 0, bounce: 0, tpf: 0 }
     );
   }, [filteredSites]);
+
+  const handleRefresh = async (siteId: number) => {
+  console.log(`Refreshing site ${siteId}...`);
+  try {
+    if (siteId === 1) {
+      const data = await fetchPG688Counts();
+      console.log("PG688 API response:", data);
+    }
+    // Later you can extend:
+    // else if (siteId === 2) await fetchPG6881Counts();
+    // else if (siteId === 3) await fetchPGXXXCounts();
+  } catch (err) {
+    console.error(`Error refreshing site ${siteId}:`, err);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 p-6 text-gray-800">
@@ -172,7 +188,7 @@ export default function PendingDashboard() {
 
               <div className="mt-8 flex items-center justify-between text-[12px] text-gray-500">
                 <span>อัปเดตล่าสุด: {new Date().toLocaleTimeString()}</span>
-                <button className="rounded-lg px-2 py-1 ring-1 ring-gray-300 hover:bg-gray-100">
+                <button onClick={() => handleRefresh(site.id)} className="rounded-lg px-2 py-1 ring-1 ring-gray-300 hover:bg-gray-100">
                   รายละเอียด
                 </button>
               </div>
