@@ -4,19 +4,79 @@
     "name": "PG688",
     "logo": "/logos/pg688.webp",
     "loginUrl": "https://www.pg68846108.com/tac/api/login/password",
-    "getCountUrl": "https://www.pg68846108.com/tac/api/workflow/getAvailableTasksNewVersion?pageNo=1&maxResult=50",
+    "getCountUrl": "https://www.pg68846108.com/tac/api/workflow/getAvailableTasksNewVersion",
     "referer": "https://www.pg68846108.com/",
     "operatorName": "it02okvippg688",
-    "password": "An&aSUIXM2"
+    "password": "1Lovefr33d@m"
   },
   {
     "id": 2,
     "name": "NEW88",
-    "logo": "/logos/new88.ewbp",
+    "logo": "/logos/new88.webp",
     "loginUrl": "https://www.pg789328341.com/tac/api/login/password",
-    "getCountUrl": "https://www.pg789328341.com/tac/api/workflow/getAvailableTasksNewVersion?pageNo=1&maxResult=50",
-    "referer": "https://www.pg789328341.com",
+    "getCountUrl": "https://www.pg789328341.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://www.pg789328341.com/",
     "operatorName": "it01new88",
-    "password": "j4dKM@%$M*%l"
+    "password": "1Lovefr33d@m"
+  },
+  {
+    "id": 3,
+    "name": "78WIN",
+    "logo": "/logos/78WIN.png",
+    "loginUrl": "https://pg570563496.com/tac/api/login/password",
+    "getCountUrl": "https://pg570563496.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://pg570563496.com/",
+    "operatorName": "it78win",
+    "password": "1Lovefr33d@m"
+  },
+  {
+    "id": 4,
+    "name": "MB66",
+    "logo": "/logos/MB66.png",
+    "loginUrl": "https://www.pg321731407.com/tac/api/login/password",
+    "getCountUrl": "https://www.pg321731407.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://www.pg321731407.com/",
+    "operatorName": "it01mb66",
+    "password": "1Lovefr33d@m"
+  },
+  {
+    "id": 5,
+    "name": "TH39",
+    "logo": "/logos/TH39.png",
+    "loginUrl": "https://www.th39046578.com/tac/api/login/password",
+    "getCountUrl": "https://www.th39046578.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://www.th39046578.com/",
+    "operatorName": "itth39",
+    "password": "1Lovefr33d@m"
+  },
+  {
+    "id": 6,
+    "name": "VG98",
+    "logo": "/logos/VG98.png",
+    "loginUrl": "https://www.vg98780994.com/tac/api/login/password",
+    "getCountUrl": "https://www.vg98780994.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://www.vg98780994.com/",
+    "operatorName": "itvg98",
+    "password": "1Lovefr33d@m"
+  },
+  {
+    "id": 7,
+    "name": "JL69",
+    "logo": "/logos/jl69.png",
+    "loginUrl": "https://8154271193.com/tac/api/login/password",
+    "getCountUrl": "https://8154271193.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://8154271193.com/",
+    "operatorName": "itjl69",
+    "password": "1Lovefr33d@m"
+  },
+  {
+    "id": 8,
+    "name": "711PG",
+    "logo": "/logos/711PG.png",
+    "loginUrl": "https://www.7p472906759.com/tac/api/login/password",
+    "getCountUrl": "https://www.7p472906759.com/tac/api/workflow/getAvailableTasksNewVersion",
+    "referer": "https://www.7p472906759.com/",
+    "operatorName": "it711pg",
+    "password": "1Lovefr33d@m"
   }
 ]

@@ -14,7 +14,6 @@ export async function GET(req: NextRequest) {
 
   try {
     const headers: Record<string, string> = {
-      "User-Agent": "Mozilla/5.0 (Next.js Proxy)",
     };
 
     searchParams.forEach((value, key) => {
@@ -30,6 +29,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response.data);
   } catch (error: any) {
+    console.log("Got Error At HTTP GET...");
     console.error("🔴 Proxy GET error:", {
       message: error.message,
       status: error.response?.status,
@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const headers: Record<string, string> = {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
       "Content-Type": "application/json",
     };
 

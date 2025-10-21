@@ -1,12 +1,12 @@
-// src/services/pg688.service.ts
+// src/services/jl69.service.ts
 import api from "../utils/axios";
 import siteData from "../data/sites.json";
 
-const site: any = siteData.find((s) => s.id === 1);
-if (!site) throw new Error("PG688 site config not found in sites.json");
+const site: any = siteData.find((s) => s.id === 7);
+if (!site) throw new Error("JL69 site config not found in sites.json");
 
 
-let cachedToken: string | null = localStorage.getItem("pg688_token") || null;
+let cachedToken: string | null = localStorage.getItem("jl69_token") || null;
 
 /**
  * Login and get new token
@@ -24,14 +24,14 @@ async function loginAndGetToken(): Promise<string> {
   if (!token) throw new Error("Login failed: token not found");
 
   cachedToken = token;
-  localStorage.setItem("pg688_token", token); 
+  localStorage.setItem("jl69_token", token); 
   return token;
 }
 
 /**
  * Fetch task counts
  */
-export async function fetchPG688Counts(pageNo = 1, maxResult = 50) {
+export async function fetchJL69Counts(pageNo = 1, maxResult = 50) {
   try {
     let token = cachedToken;
 
@@ -74,7 +74,7 @@ export async function fetchPG688Counts(pageNo = 1, maxResult = 50) {
       }
     }
 
-    console.log("🧮 PG688 counts:", counts);
+    console.log("🧮 JL69 counts:", counts);
     return counts;
   } catch (error: any) {
 
@@ -83,13 +83,13 @@ export async function fetchPG688Counts(pageNo = 1, maxResult = 50) {
 
     if (status === 401 || code === "INVALID_TOKEN") {
       console.warn("Token invalid — retrying login...");
-      localStorage.removeItem("pg688_token");
+      localStorage.removeItem("jl69_token");
       cachedToken = null;
       const newToken = await loginAndGetToken();
-      return await fetchPG688Counts(pageNo, maxResult);
+      return await fetchJL69Counts(pageNo, maxResult);
     }
 
-    console.error("🔴 fetchPG688Counts error:", error);
+    console.error("🔴 fetchJL69Counts error:", error);
     throw error;
   }
 }
