@@ -65,24 +65,17 @@ export default function PendingDashboard() {
   };
 
   const handleRoute = (siteId: number) => {
-    const site = sites.find((s) => s.id === siteId);
-    if (!site) return;
-
-    // Each site config is in sites.json
-    const siteInfo = require("./data/sites.json").find((x: any) => x.id === siteId);
-    if (!siteInfo?.referer) {
-      console.error("No referer found for site:", siteId);
-      return;
-    }
+    const siteInfo = siteData.find((x: any) => x.id === siteId);
+    if (!siteInfo?.referer) return;
 
     const url = `${siteInfo.referer.replace(/\/$/, "")}/20008`;
-
-    // ✅ Reuse tab if exists and still open
-    if (tabRefs[siteId] && !tabRefs[siteId]?.closed) {
-      tabRefs[siteId]?.focus();
-      tabRefs[siteId]!.location.href = url;
+    let newTab = tabRefs[siteId];
+    if (newTab && !newTab.closed) {
+      newTab.focus();
+      newTab.location.href = url;
     } else {
-      tabRefs[siteId] = window.open(url, "_blank");
+      newTab = window.open(url, "_blank");
+      tabRefs[siteId] = newTab;
     }
   };
 
