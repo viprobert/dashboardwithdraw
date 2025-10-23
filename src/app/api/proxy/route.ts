@@ -1,96 +1,105 @@
-import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
-import https from "https";
+export const runtime = "edge";
 
-const httpsAgent = new https.Agent({ rejectUnauthorized: false }); // allow self-signed SSL
-
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const target = searchParams.get("target");
-
   if (!target) {
-    return NextResponse.json({ error: "Missing target parameter" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing target parameter" }), { status: 400 });
+  }
+
+  const decodedUrl = decodeURIComponent(target);
+  const headers: Record<string, string> = {};
+
+  for (const [key, value] of searchParams.entries()) {
+    if (key.startsWith("header_") && value) {
+      headers[key.replace("header_", "")] = decodeURIComponent(value);
+    }
+  }
+
+  const isLineAPI = decodedUrl.includes("chat.line.biz");
+  const USER_AGENT =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36";
+
+  const finalHeaders: Record<string, string> = {
+    "User-Agent": USER_AGENT,
+  };
+
+  if (isLineAPI) {
+    if (headers["Cookie"]) finalHeaders["Cookie"] = headers["Cookie"];
+  } else {
+    finalHeaders["Content-Type"] = "application/json";
+    if (headers["Referer"]) finalHeaders["Referer"] = headers["Referer"];
   }
 
   try {
-    const headers: Record<string, string> = {
-    };
-
-    searchParams.forEach((value, key) => {
-      if (key.startsWith("header_")) {
-        headers[key.replace("header_", "")] = value;
-      }
+    const res = await fetch(decodedUrl, {
+      method: "GET",
+      headers: finalHeaders,
     });
 
-    const response = await axios.get(target, {
-      headers,
-      httpsAgent,
-    });
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("text/html")) {
+      const text = await res.text();
+      return new Response(
+        JSON.stringify({
+          valid: false,
+          message: "Upstream returned HTML instead of JSON",
+          raw: text.slice(0, 300),
+        }),
+        { status: 502 }
+      );
+    }
 
-    return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.log("Got Error At HTTP GET...");
-    console.error("🔴 Proxy GET error:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
+    const data = await res.text();
+    return new Response(data, {
+      status: res.status,
+      headers: { "Content-Type": contentType },
     });
-    return NextResponse.json(
-      {
-        error: "Proxy GET request failed",
-        details: error.message,
-        status: error.response?.status,
-        response: error.response?.data,
-      },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   const { searchParams } = new URL(req.url);
   const target = searchParams.get("target");
-
   if (!target) {
-    return NextResponse.json({ error: "Missing target parameter" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing target parameter" }), { status: 400 });
   }
 
+  const decodedUrl = decodeURIComponent(target);
+  const body = await req.text();
+
+  const headers: Record<string, string> = {};
+  for (const [key, value] of searchParams.entries()) {
+    if (key.startsWith("header_") && value) {
+      headers[key.replace("header_", "")] = decodeURIComponent(value);
+    }
+  }
+
+  const USER_AGENT =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36";
+
+  const finalHeaders: Record<string, string> = {
+    "User-Agent": USER_AGENT,
+    "Content-Type": "application/json",
+  };
+  if (headers["Referer"]) finalHeaders["Referer"] = headers["Referer"];
+
   try {
-    const body = await req.json();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    searchParams.forEach((value, key) => {
-      if (key.startsWith("header_")) {
-        headers[key.replace("header_", "")] = value;
-      }
+    const res = await fetch(decodedUrl, {
+      method: "POST",
+      headers: finalHeaders,
+      body,
     });
 
-    console.log("🟢 Proxying POST to:", target);
-    console.log("Headers:", headers);
-    console.log("Body:", body);
-
-    const response = await axios.post(target, body, {
-      headers,
-      httpsAgent: new (require("https").Agent)({ rejectUnauthorized: false }),
+    const contentType = res.headers.get("content-type") || "";
+    const data = await res.text();
+    return new Response(data, {
+      status: res.status,
+      headers: { "Content-Type": contentType },
     });
-
-    return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error("🔴 Proxy POST error details:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-
-    return NextResponse.json(
-      {
-        error: "Proxy POST request failed",
-        status: error.response?.status,
-        remoteResponse: error.response?.data,
-      },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
