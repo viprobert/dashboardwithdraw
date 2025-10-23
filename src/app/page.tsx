@@ -225,7 +225,7 @@ export default function PendingDashboard() {
 
               <div className="mt-8 flex items-center justify-between text-[12px] text-gray-500">
                 {/* อัปเดตล่าสุด */}
-                <span>Last Updated: {new Date().toLocaleTimeString()}</span> 
+                <span>Last Updated: {lastUpdated}</span> 
                 <div className="flex gap-2">
                   {/* Route button */}
                   <button

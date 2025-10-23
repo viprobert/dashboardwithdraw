@@ -1,6 +1,6 @@
 import api from "../utils/axios";
-import siteData from "../data/sites.json"
-import { showOtpDialog } from "../components/OtpDialogHandler"
+import siteData from "../data/sites.json";
+import { showOtpDialog } from "../components/OtpDialogHandler";
 
 interface SiteConfig {
   id: number;
@@ -12,11 +12,14 @@ interface SiteConfig {
   getCountUrl: string;
 }
 
+// AxiosResponse type
+import type { AxiosResponse } from "axios";
+
 const tokenCache: Record<number, string | null> = {};
 
 // 🔹 Get site config
 function getSite(siteId: number): SiteConfig {
-  const site: any = siteData.find((s) => s.id === siteId);
+  const site = (siteData as SiteConfig[]).find((s) => s.id === siteId);
   if (!site) throw new Error(`Site config not found for ID ${siteId}`);
   return site;
 }
@@ -25,7 +28,7 @@ function getSite(siteId: number): SiteConfig {
 async function loginAndGetToken(site: SiteConfig): Promise<string> {
   console.log(`🔐 Logging in for ${site.name}...`);
 
-  const res = await api.post(
+  const res: AxiosResponse<any> = await api.post(
     `/api/proxy?target=${encodeURIComponent(site.loginUrl)}&header_Referer=${encodeURIComponent(site.referer)}`,
     {
       operatorName: site.operatorName,
@@ -33,9 +36,14 @@ async function loginAndGetToken(site: SiteConfig): Promise<string> {
     }
   );
 
-  const token = res?.data?.data?.token || res?.data?.token;
-  
-  if (res?.data?.data?.needOtp === true || res?.data?.errorCode?.includes("OTP") || res?.data?.data?.errorCode?.include("OTP")) {
+  const token =
+    res?.data?.data?.token || res?.data?.token;
+
+  if (
+    res?.data?.data?.needOtp === true ||
+    res?.data?.errorCode?.includes("OTP") ||
+    res?.data?.data?.errorCode?.includes("OTP")
+  ) {
     console.warn(`⚠️ ${site.name} requires OTP authentication`);
 
     const otpToken = await showOtpDialog({
@@ -64,7 +72,11 @@ async function loginAndGetToken(site: SiteConfig): Promise<string> {
 }
 
 // 🔹 Fetch and count with re-login on token invalid
-export async function fetchSiteCounts(siteId: number, pageNo = 1, maxResult = 50) {
+export async function fetchSiteCounts(
+  siteId: number,
+  pageNo = 1,
+  maxResult = 50
+): Promise<Record<"new" | "review" | "transfer" | "bounce", number>> {
   const site = getSite(siteId);
 
   let token =
@@ -78,22 +90,15 @@ export async function fetchSiteCounts(siteId: number, pageNo = 1, maxResult = 50
     return url.toString();
   };
 
-  const callAPI = async (authToken: string) => {
-    return await api.get(
+  const callAPI = async (authToken: string): Promise<AxiosResponse<any>> => {
+    return api.get(
       `/api/proxy?target=${encodeURIComponent(buildUrl())}&header_Authorization=${encodeURIComponent(authToken)}`
     );
   };
 
-  try {
-    const res: any = await callAPI(token);
-
-    const items =
-      res?.data?.value?.WTD?.getResults ??
-      res?.data?.data?.value?.WTD?.getResults ??
-      [];
-
+  const extractCounts = (items: unknown[]): Record<"new" | "review" | "transfer" | "bounce", number> => {
     const counts = { new: 0, review: 0, transfer: 0, bounce: 0 };
-    for (const item of items) {
+    for (const item of items as Array<{ state?: { stateName?: string } }>) {
       switch (item?.state?.stateName) {
         case "Withdraw-New":
           counts.new++;
@@ -110,15 +115,24 @@ export async function fetchSiteCounts(siteId: number, pageNo = 1, maxResult = 50
           break;
       }
     }
+    return counts;
+  };
 
+  try {
+    const res = await callAPI(token);
+    const items =
+      res?.data?.value?.WTD?.getResults ??
+      res?.data?.data?.value?.WTD?.getResults ??
+      [];
+    const counts = extractCounts(items);
     console.log(`🧮 ${site.name} counts:`, counts);
     return counts;
-  } catch (error: any) {
-    const status = error?.response?.status;
-    const data = error?.response?.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: any } };
+    const status = err?.response?.status;
+    const data = err?.response?.data;
     const errorCode = data?.errorCode || data?.data?.errorCode;
 
-    // check 401 and proxy 500 wrapping 401
     const isInvalidToken =
       status === 401 ||
       errorCode === "INVALID_TOKEN" ||
@@ -126,39 +140,18 @@ export async function fetchSiteCounts(siteId: number, pageNo = 1, maxResult = 50
 
     if (isInvalidToken) {
       console.warn(`⚠️ ${site.name}: token invalid, reauthenticating...`);
-
       localStorage.removeItem(`${site.name.toLowerCase()}_token`);
       tokenCache[site.id] = null;
 
       const newToken = await loginAndGetToken(site);
-
       console.log(`🔁 Retrying ${site.name} with new token...`);
-      const retryRes: any = await callAPI(newToken);
 
+      const retryRes = await callAPI(newToken);
       const items =
         retryRes?.data?.value?.WTD?.getResults ??
         retryRes?.data?.data?.value?.WTD?.getResults ??
         [];
-
-      const counts = { new: 0, review: 0, transfer: 0, bounce: 0 };
-      for (const item of items) {
-        switch (item?.state?.stateName) {
-          case "Withdraw-New":
-            counts.new++;
-            break;
-          case "Withdraw-In-Review":
-            counts.review++;
-            break;
-          case "Withdraw-Approve":
-          case "Withdraw-Approve-IR":
-            counts.transfer++;
-            break;
-          case "Third-Party-Refusal":
-            counts.bounce++;
-            break;
-        }
-      }
-
+      const counts = extractCounts(items);
       console.log(`🧮 ${site.name} (after re-login) counts:`, counts);
       return counts;
     }
