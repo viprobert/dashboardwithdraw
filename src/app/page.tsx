@@ -1,13 +1,7 @@
 "use client";
-import React, { useMemo, useState } from "react";
-import { fetchPG688Counts } from "./services/pg688.service";
-import { fetchNEW88Counts } from "./services/new88.service";
-import { fetch78WINCounts } from "./services/78win.service";
-import { fetchMB66Counts } from "./services/mb66.service";
-import { fetchTH39Counts } from "./services/th39.service";
-import { fetchVG98Counts } from "./services/vg98.service";
-import { fetchJL69Counts } from "./services/jl69.service";
-import { fetch711PGCounts } from "./services/711pg.service";
+import React, { useMemo, useState, useEffect } from "react";
+import { fetchSiteCounts } from "./services/site.service";
+import siteData from "./data/sites.json"
 
 const sampleSites = [
   { id: 1, name: "PG688", logo: "/logos/PG688.webp", counts: { new: 0, review: 0, transfer: 0, bounce: 0 } },
@@ -21,10 +15,10 @@ const sampleSites = [
 ];
 
 const STATUSES = [
-  { key: "new", label: "Withdraw-New", bg: "bg-emerald-50", ring: "ring-emerald-200", text: "text-emerald-700" }, //ถอนใหม่
-  { key: "review", label: "Withdraw-In-Review", bg: "bg-blue-50", ring: "ring-blue-200", text: "text-blue-700" }, //ตรวจสอบก่อนไปจ่าย
-  { key: "transfer", label: "Withdraw-Approve", bg: "bg-amber-50", ring: "ring-amber-200", text: "text-amber-700" }, //กำลังโอน
-  { key: "bounce", label: "Third-Party-Refusal", bg: "bg-rose-50", ring: "ring-rose-200", text: "text-rose-700" }, //ตีกลับ
+  { key: "new", label: "ถอนใหม่", bg: "bg-emerald-50", ring: "ring-emerald-200", text: "text-emerald-700" }, // Withdraw New
+  { key: "review", label: "ตรวจสอบก่อนไปจ่าย", bg: "bg-blue-50", ring: "ring-blue-200", text: "text-blue-700" }, //Withdraw-In-Review
+  { key: "transfer", label: "กำลังโอน", bg: "bg-amber-50", ring: "ring-amber-200", text: "text-amber-700" }, //Withdraw-Approve
+  { key: "bounce", label: "ตีกลับ", bg: "bg-rose-50", ring: "ring-rose-200", text: "text-rose-700" }, //Third-Party-Refusal
 ];
 
 const Logo = () => (
@@ -37,6 +31,7 @@ export default function PendingDashboard() {
   const [sites, setSites] = useState(sampleSites);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
   const filteredSites = useMemo(() => {
     return sites.filter((s) => {
@@ -61,57 +56,9 @@ export default function PendingDashboard() {
   }, [filteredSites]);
 
   const handleRefresh = async (siteId: number) => {
-    console.log(`Refreshing site ${siteId}...`);
     try {
-      if (siteId === 1) {
-        const counts = await fetchPG688Counts();
-        console.log("PG688 API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 2) {
-        const counts = await fetchNEW88Counts();
-        console.log("NEW88 API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 3) {
-        const counts = await fetch78WINCounts();
-        console.log("78WIN API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 4) {
-        const counts = await fetchMB66Counts();
-        console.log("MB66 API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 5) {
-        const counts = await fetchTH39Counts();
-        console.log("TH39 API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 6) {
-        const counts = await fetchVG98Counts();
-        console.log("VG98 API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 7) {
-        const counts = await fetchJL69Counts();
-        console.log("VG98 API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      } else if (siteId === 8) {
-        const counts = await fetch711PGCounts();
-        console.log("711PG API counts:", counts);
-        setSites((prev) =>
-          prev.map((s) => (s.id === siteId ? { ...s, counts } : s))
-        );
-      }
+      const counts = await fetchSiteCounts(siteId);
+      setSites((prev) => prev.map((s) => (s.id === siteId ? { ...s, counts } : s)));
     } catch (err) {
       console.error(`Error refreshing site ${siteId}:`, err);
     }
@@ -139,6 +86,36 @@ export default function PendingDashboard() {
     }
   };
 
+  useEffect(() => {
+    const refreshAllSites = async () => {
+      console.log("⏱️ Auto refreshing all sites...");
+      try {
+        const updated = await Promise.all(
+          sites.map(async (s) => {
+            const counts = await fetchSiteCounts(s.id);
+            return { ...s, counts };
+          })
+        );
+        setSites(updated);
+
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString("th-TH", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        setLastUpdated(formattedTime);
+      } catch (err) {
+        console.error("❌ Auto-refresh error:", err);
+      }
+    };
+
+    refreshAllSites();
+    const interval = setInterval(refreshAllSites, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 p-6 text-gray-800">
       <div className="mx-auto max-w-[1800px]">
@@ -150,7 +127,7 @@ export default function PendingDashboard() {
               <Logo />
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900">
-                  แดชบอร์ดสรุปรายการค้าง (Pending Withdrawal Dashboard)
+                  แดชบอร์ดสรุปรายการค้าง
                 </h1>
               </div>
             </div>
@@ -165,7 +142,7 @@ export default function PendingDashboard() {
                     : "bg-white text-gray-700 ring-gray-300 hover:bg-gray-100"
                 }`}
               >
-                ทั้งหมด (All)
+                ทั้งหมด
               </button>
               {STATUSES.map((s) => (
                 <button
@@ -209,7 +186,7 @@ export default function PendingDashboard() {
 
             {/* Search */}
             <input
-              placeholder="ค้นหาเว็บไซต์... (Search Site...)"
+              placeholder="ค้นหาเว็บไซต์..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-72 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
@@ -234,7 +211,7 @@ export default function PendingDashboard() {
                   <h3 className="text-sm font-semibold text-gray-900">{site.name}</h3>
                 </div>
                 <span className="rounded-lg bg-gray-100 px-2 py-1 text-[12px] font-medium text-gray-700 ring-1 ring-gray-200">
-                  รวม (Total) {Object.values(site.counts).reduce((a, b) => a + b, 0)} รายการ (Records)
+                  รวม {Object.values(site.counts).reduce((a, b) => a + b, 0)} รายการ
                 </span>
               </div>
 
@@ -262,7 +239,7 @@ export default function PendingDashboard() {
                     onClick={() => handleRoute(site.id)}
                     className="rounded-lg px-2 py-1 ring-1 ring-gray-300 hover:bg-gray-100"
                   >
-                    Route
+                    เปลี่ยนเส้นทาง
                   </button>
 
                   {/* Refresh button */}{/* รายละเอียด */}
@@ -270,7 +247,7 @@ export default function PendingDashboard() {
                     onClick={() => handleRefresh(site.id)}
                     className="rounded-lg px-2 py-1 ring-1 ring-gray-300 hover:bg-gray-100"
                   >
-                    Refresh
+                    รีเฟรช
                   </button>
                 </div>
               </div>
